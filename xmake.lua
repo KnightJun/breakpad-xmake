@@ -1,0 +1,22 @@
+add_includedirs("breakpad\\src")
+add_defines("_UNICODE", "UNICODE")
+target("common")
+    set_kind("static")
+    add_files("breakpad\\src\\common\\windows\\guid_string.cc")
+    add_files("breakpad\\src\\common\\windows\\http_upload.cc")
+    add_files("breakpad\\src\\common\\windows\\string_utils.cc")
+
+target("exception_handler")
+    set_kind("static")
+    add_files("breakpad\\src\\client\\windows\\handler\\exception_handler.cc")
+
+target("crash_generation_client")
+    set_kind("static")
+    add_files("breakpad\\src\\client\\windows\\crash_generation\\crash_generation_client.cc")
+
+target("test")
+    set_kind("binary")
+    set_symbols("debug")
+    add_links("User32")
+    add_deps("exception_handler", "common", "crash_generation_client")
+    add_files("test\\test.cc")
