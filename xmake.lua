@@ -20,6 +20,7 @@ target("wingetopt")
     add_files("wingetopt\\wingetopt.c")
 
 target("libdisasm")
+    set_default(false)
     set_kind("static")
     add_files('breakpad\\src\\third_party\\libdisasm\\ia32_implicit.c',
 	'breakpad\\src\\third_party\\libdisasm\\ia32_insn.c',
@@ -36,7 +37,14 @@ target("libdisasm")
 	'breakpad\\src\\third_party\\libdisasm\\x86_misc.c',
 	'breakpad\\src\\third_party\\libdisasm\\x86_operand_list.c')
 
+target("breakpadwarp")
+    set_kind("shared")
+    add_deps("exception_handler", "common", "crash_generation_client")
+    add_files("breakpadwarp\\breakpadwarp.cc")
+    add_headerfiles("breakpadwarp\\breakpadwarp.h")
+
 target("processor")
+    set_default(false)
     set_kind("static")
     add_deps("common", "libdisasm")
     add_files(
@@ -82,18 +90,29 @@ target("processor")
         'breakpad\\src\\processor\\tokenize.cc')
 
 target("minidump_stackwalk")
+    set_default(false)
     set_kind("binary")
     add_deps("wingetopt", "processor", "common")
     add_files("breakpad\\src\\processor\\minidump_stackwalk.cc")
 
-target("breakpadwarp")
-    set_kind("shared")
-    add_deps("exception_handler", "common", "crash_generation_client")
-    add_files("breakpadwarp\\breakpadwarp.cc")
 
 target("test")
+    set_default(false)
     set_kind("binary")
     add_includedirs("breakpadwarp")
     set_symbols("debug")
     add_deps("breakpadwarp")
     add_files("test\\test.cc")
+    after_build(function (target)
+        local pdbfile = path.join(target:targetdir(), target:basename()..'.pdb')
+        local symfile = path.join(target:targetdir(), target:basename()..'.sym')
+        os.execv("dump_syms.exe", {pdbfile}, {stdout = symfile})
+        local  dbgsymdir = path.join(target:targetdir(), "debug_symbol")
+        os.mkdir(dbgsymdir)
+        local pdbdir = path.join(dbgsymdir, target:basename()..'.pdb')
+        os.mkdir(pdbdir)
+        local idstr = io.lines(symfile)():split(' ')[4]
+        local iddir = path.join(pdbdir, idstr)
+        os.mkdir(iddir)
+        os.cp(symfile, iddir)
+    end)
