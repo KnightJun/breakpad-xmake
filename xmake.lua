@@ -39,6 +39,7 @@ target("libdisasm")
 
 target("breakpadwarp")
     set_kind("shared")
+    add_defines("Breakpadwarp_LIB")
     add_deps("exception_handler", "common", "crash_generation_client")
     add_files("breakpadwarp\\breakpadwarp.cc")
     add_headerfiles("breakpadwarp\\breakpadwarp.h")
